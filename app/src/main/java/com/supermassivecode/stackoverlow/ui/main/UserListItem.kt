@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,26 +24,30 @@ fun UserListItem(
     modifier: Modifier = Modifier
 ) {
     Row(
-      modifier = modifier
-          .fillMaxWidth()
-          .padding(12.dp)
-          .clickable { onFollowToggle(user) },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+            .clickable { onFollowToggle(user) },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // TODO: add image
+        AsyncImage(
+            url = user.imageUrl ?: "", // TODO: handle this better / show default / don't show UI element at all
+            contentDescription = "My image",
+            modifier = Modifier.size(200.dp)
+        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(
             modifier = Modifier.weight(1f)
         ) {
-           Text(text = user.name, style = MaterialTheme.typography.titleMedium)
-           Spacer(modifier = Modifier.height(4.dp))
-           Text(
-               text = "Reputation: ${user.reputationScore}",
-               style = MaterialTheme.typography.bodyMedium,
-               color = MaterialTheme.colorScheme.onSurfaceVariant
-           )
+            Text(text = user.name, style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Reputation: ${user.reputationScore}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         TextButton(
