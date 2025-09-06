@@ -1,24 +1,28 @@
+// UserRepo.kt
 package com.supermassivecode.stackoverlow.data.local
 
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.core.content.edit
 import com.supermassivecode.stackoverlow.data.remote.StackOverflowApiService
+import com.supermassivecode.stackoverlow.data.remote.StackOverflowApiServiceImpl
 import com.supermassivecode.stackoverlow.data.remote.User
 import com.supermassivecode.stackoverlow.data.remote.UserApiResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class UserRepo(
-    context: Context,
-    private val apiService: StackOverflowApiService = StackOverflowApiService()
+    private val apiService: StackOverflowApiService,
+    private val followStore: FollowStore
 ) {
-    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    constructor(
+        context: Context,
+        apiService: StackOverflowApiService = StackOverflowApiServiceImpl()
+    ) : this(apiService, SharedPrefsFollowStore(context))
+
     private var followedUsersCache: MutableSet<Int>? = null
 
     suspend fun getLatestTopUsers(): Result<List<User>> = withContext(Dispatchers.IO) {
         try {
-            val json = apiService.getUsersSortedByReputation()
+            val json = apiService.getUsersSortedByReputation(limit = 20)
             val users = UserApiResponse.fromJson(json).items
             Result.success(users)
         } catch (e: Exception) {
@@ -26,51 +30,29 @@ class UserRepo(
         }
     }
 
-    fun isFollowing(userId: Int): Boolean {
-        return getFollowedUsers().contains(userId)
-    }
+    fun isFollowing(userId: Int): Boolean = getFollowedUsers().contains(userId)
 
     fun toggleFollow(userId: Int): Boolean {
-        val followedUsers = getFollowedUsers()
-        val isNowFollowing = if (followedUsers.contains(userId)) {
-            followedUsers.remove(userId)
-            false
+        val set = getFollowedUsers()
+        val nowFollowing = if (set.contains(userId)) {
+            set.remove(userId); false
         } else {
-            followedUsers.add(userId)
-            true
+            set.add(userId); true
         }
-        saveFollowedUsers(followedUsers)
-        return isNowFollowing
+        saveFollowedUsers(set)
+        return nowFollowing
     }
 
     private fun getFollowedUsers(): MutableSet<Int> {
-        if (followedUsersCache == null) {
-            loadFollowedUsers()
-        }
-        return followedUsersCache!!
+        val cached = followedUsersCache
+        if (cached != null) return cached
+        val loaded = followStore.load()
+        followedUsersCache = loaded
+        return loaded
     }
 
-    private fun loadFollowedUsers() {
-        val followedString = prefs.getString(FOLLOWED_USERS_KEY, "") ?: ""
-        followedUsersCache = if (followedString.isNotEmpty()) {
-            followedString.split(DELIMITER)
-                .mapNotNull { it.toIntOrNull() }
-                .toMutableSet()
-        } else {
-            mutableSetOf()
-        }
-    }
-
-    private fun saveFollowedUsers(followedUsers: MutableSet<Int>) {
-        followedUsersCache = followedUsers
-        prefs.edit {
-            putString(FOLLOWED_USERS_KEY, followedUsers.joinToString(DELIMITER))
-        }
-    }
-
-    companion object {
-        private const val PREFS_NAME = "user_follows"
-        private const val FOLLOWED_USERS_KEY = "followed_users"
-        private const val DELIMITER = ","
+    private fun saveFollowedUsers(set: MutableSet<Int>) {
+        followedUsersCache = set
+        followStore.save(set)
     }
 }

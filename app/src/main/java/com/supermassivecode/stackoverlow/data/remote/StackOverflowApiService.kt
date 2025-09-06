@@ -6,12 +6,17 @@ import java.net.HttpURLConnection
 import java.net.URL
 import androidx.core.net.toUri
 
-class StackOverflowApiService(
+interface StackOverflowApiService {
+    fun getUsersSortedByReputation(limit: Int): String
+}
+
+class StackOverflowApiServiceImpl(
     private val baseUri: Uri = "https://api.stackexchange.com/2.2/".toUri(),
     private val connectTimeoutMs: Int = 10_000,
     private val readTimeoutMs: Int = 10_000,
-) {
-    fun getUsersSortedByReputation(limit: Int = 20): String {
+): StackOverflowApiService {
+
+    override fun getUsersSortedByReputation(limit: Int): String {
         val url = baseUri.buildUpon()
             .appendPath("users")
             .appendQueryParameter("page", "1")
