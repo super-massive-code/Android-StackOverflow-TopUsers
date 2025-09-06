@@ -5,15 +5,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.unit.dp
 import com.supermassivecode.stackoverlow.ui.theme.StackoverlowTheme
 
 class MainActivity : ComponentActivity() {
@@ -44,14 +49,53 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Loading(modifier: Modifier = Modifier) {
-
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .semantics { contentDescription = "Loading" },
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            strokeWidth = 3.dp,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
 }
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "MainList – Light")
 @Composable
 fun MainListPreview() {
     StackoverlowTheme {
-        //TODO: fill this in with dummy data
+        val sample = listOf(
+            UiUser(
+                userId = 1,
+                name = "Trev Jones",
+                imageUrl = "",
+                reputationScore = 12_345,
+                followed = false
+            ),
+            UiUser(
+                userId = 2,
+                name = "Terry Jones",
+                imageUrl = "",
+                reputationScore = 8_760,
+                followed = true
+            ),
+            UiUser(
+                userId = 3,
+                name = "Gary Potter",
+                imageUrl = "",
+                reputationScore = 2_101,
+                followed = false
+            )
+        )
+
+        MainList(
+            userList = sample,
+            onFollowToggle = {},
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
